@@ -1,6 +1,7 @@
 import {ModuleWithProviders} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 
+import {AuthComponent} from './components/auth.component';
 import {LoginComponent} from './components/login.component';
 import {RegisterComponent} from './components/register.component';
 
@@ -16,15 +17,15 @@ import {
 export const routes: Routes = [
   {
     path: '',
-    component: NbAuthComponent,
+    component: AuthComponent,
     children: [
       {
         path: '',
-        component: NbLoginComponent,
+        component: LoginComponent,
       },
       {
         path: 'login',
-        component: NbLoginComponent,
+        component: LoginComponent,
       },
       {
         path: 'register',

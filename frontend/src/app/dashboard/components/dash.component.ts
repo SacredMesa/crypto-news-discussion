@@ -13,8 +13,8 @@ export class DashComponent {
   sideNavMenu = [
     {
       title: 'Token Name (placeholder)',
-      icon: 'people',
-      link: '/dashboard/robots'
+      icon: 'heart',
+      link: '/dashboard/coin'
     },
     {
       title: 'Login',

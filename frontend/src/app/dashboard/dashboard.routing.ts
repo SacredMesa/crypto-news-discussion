@@ -10,7 +10,7 @@ export const routes: Routes = [
     component: DashComponent,
     children: [
       {
-        path: 'robots',
+        path: 'coin',
         component: CoinComponent
       },
     ]

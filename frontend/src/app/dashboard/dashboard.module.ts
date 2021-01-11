@@ -16,8 +16,10 @@ import {
   NbButtonModule,
   NbMenuModule,
   NbIconModule,
-  NbCardModule
+  NbCardModule,
+  NbListModule
 } from '@nebular/theme';
+import { ChatComponent } from './components/chat.component';
 
 const NEBULAR = [
   NbThemeModule,
@@ -26,13 +28,15 @@ const NEBULAR = [
   NbButtonModule,
   NbMenuModule,
   NbIconModule,
-  NbCardModule
+  NbCardModule,
+  NbListModule
 ];
 
 @NgModule({
   declarations: [
     DashComponent,
-    CoinComponent
+    CoinComponent,
+    ChatComponent
   ],
   imports: [
     CommonModule,

@@ -5,42 +5,37 @@ import {NgModule} from '@angular/core';
 import {authenticationRouting} from './authentication.routing';
 
 // Components
+import {AuthBlockComponent} from './components/auth-block.component';
+import {AuthComponent} from './components/auth.component';
 import {LoginComponent} from './components/login.component';
 import {RegisterComponent} from './components/register.component';
+import {AuthService} from './services/auth.service';
 
 // Nebular
-import {NbPasswordAuthStrategy, NbAuthModule} from '@nebular/auth';
+import {
+  NbButtonModule, NbCardModule,
+  NbIconModule, NbInputModule,
+  NbLayoutModule,
+  NbMenuModule,
+  NbSidebarModule,
+  NbThemeModule
+} from '@nebular/theme';
 
 const NEBULAR = [
-  NbAuthModule.forRoot({
-    strategies: [
-      NbPasswordAuthStrategy.setup({
-        name: 'email',
-        baseEndpoint: 'ENDPOINT IN HERE',
-        login: {
-          endpoint: '/auth/sign-in',
-          method: 'post',
-        },
-        register: {
-          endpoint: '/auth/sign-up',
-          method: 'post',
-        },
-        logout: {
-          endpoint: '/auth/sign-out',
-          method: 'post',
-        },
-        resetPass: {
-          endpoint: '/auth/reset-pass',
-          method: 'post',
-        }
-      })
-    ],
-    forms: {},
-  }),
+  NbThemeModule,
+  NbLayoutModule,
+  NbSidebarModule,
+  NbButtonModule,
+  NbMenuModule,
+  NbIconModule,
+  NbCardModule,
+  NbInputModule
 ];
 
 @NgModule({
   declarations: [
+    AuthBlockComponent,
+    AuthComponent,
     LoginComponent,
     RegisterComponent
   ],
@@ -50,8 +45,12 @@ const NEBULAR = [
     NEBULAR
   ],
   exports: [
+    AuthComponent,
     LoginComponent,
     RegisterComponent
+  ],
+  providers: [
+    AuthService
   ]
 })
 

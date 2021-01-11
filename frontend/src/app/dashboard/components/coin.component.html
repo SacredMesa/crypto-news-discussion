@@ -1,5 +1,27 @@
 <nb-layout>
-  <nb-layout-header>Awesome Crypto Stuff</nb-layout-header>
-  <nb-layout-column class="colored-column-warning">Chat column</nb-layout-column>
-  <nb-layout-column class="colored-column-danger">News and Chart column</nb-layout-column>
+<!--  <nb-layout-header>Awesome Crypto Stuff</nb-layout-header>-->
+  <nb-layout-column class="colored-column-warning">
+    <nb-card class="chat">
+      <nb-card-body>
+        <app-chat></app-chat>
+      </nb-card-body>
+    </nb-card>
+  </nb-layout-column>
+
+  <nb-layout-column class="colored-column-danger">
+    <nb-card class="chart">
+      <nb-card-body class="chart-body">
+        <div class="tradingview-widget-container">
+          <div id="tradingview_bac65"></div>
+        </div>
+      </nb-card-body>
+    </nb-card>
+    <nb-card>
+      <nb-list>
+        <nb-list-item *ngFor="let titles of headlines">
+          {{ titles }}
+        </nb-list-item>
+      </nb-list>
+    </nb-card>
+  </nb-layout-column>
 </nb-layout>

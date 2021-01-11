@@ -1,4 +1,38 @@
-.robot-container {
-  display: flex;
-  width: 20em;
+nb-layout{
+  width:100%;
+  height:100%;
+}
+
+nb-layout-column {
+  padding: 0.5rem 0.5rem 0.5rem !important;
+}
+
+nb-layout-column:first-child {
+  flex: 1 !important;
+}
+
+nb-layout-column:last-child {
+  flex: 3 !important;
+}
+
+.chat {
+  height: 100%;
+}
+
+.chart {
+  height: 50vh;
+}
+
+.chart-body {
+  height: 100%;
+}
+
+.tradingview-widget-container {
+  width: 100%;
+  height: 100%;
+  margin: auto;
+}
+
+#tradingview_bac65 {
+  height: 100%;
 }
