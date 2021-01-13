@@ -2,7 +2,9 @@ import {ModuleWithProviders} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 
 import {DashComponent} from './components/dash.component';
-import {CoinComponent} from './components/coin.component';
+import {BitcoinComponent} from './components/coins/bitcoin.component';
+import {EthereumComponent} from './components/coins/ethereum.component';
+import {SushiswapComponent} from './components/coins/sushiswap.component';
 
 export const routes: Routes = [
   {
@@ -10,8 +12,16 @@ export const routes: Routes = [
     component: DashComponent,
     children: [
       {
-        path: 'coin',
-        component: CoinComponent
+        path: 'bitcoin',
+        component: BitcoinComponent
+      },
+      {
+        path: 'ethereum',
+        component: EthereumComponent
+      },
+      {
+        path: 'sushi',
+        component: SushiswapComponent
       },
     ]
   },

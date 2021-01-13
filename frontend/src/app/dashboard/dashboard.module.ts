@@ -4,9 +4,14 @@ import {NgModule} from '@angular/core';
 // Routing
 import {dashboardRouting} from './dashboard.routing';
 
-// Components
+// Components and Services
 import {DashComponent} from './components/dash.component';
-import {CoinComponent} from './components/coin.component';
+import {ChatComponent} from './components/chat.component';
+import {BitcoinComponent} from './components/coins/bitcoin.component';
+import {EthereumComponent} from './components/coins/ethereum.component';
+import {SushiswapComponent} from './components/coins/sushiswap.component';
+
+import {NewsService} from './services/news.service';
 
 // Nebular Modules
 import {
@@ -19,7 +24,7 @@ import {
   NbCardModule,
   NbListModule
 } from '@nebular/theme';
-import { ChatComponent } from './components/chat.component';
+
 
 const NEBULAR = [
   NbThemeModule,
@@ -35,8 +40,10 @@ const NEBULAR = [
 @NgModule({
   declarations: [
     DashComponent,
-    CoinComponent,
-    ChatComponent
+    ChatComponent,
+    BitcoinComponent,
+    EthereumComponent,
+    SushiswapComponent
   ],
   imports: [
     CommonModule,
@@ -45,7 +52,10 @@ const NEBULAR = [
   ],
   exports: [
     DashComponent,
-    CoinComponent
+    BitcoinComponent
+  ],
+  providers: [
+    NewsService
   ]
 })
 

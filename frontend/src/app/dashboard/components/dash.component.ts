@@ -12,9 +12,19 @@ import {NbSidebarService} from '@nebular/theme';
 export class DashComponent {
   sideNavMenu = [
     {
-      title: 'Token Name (placeholder)',
+      title: 'Bitcoin',
       icon: 'heart',
-      link: '/dashboard/coin'
+      link: '/dashboard/bitcoin'
+    },
+    {
+      title: 'Ethereum',
+      icon: 'heart',
+      link: '/dashboard/ethereum'
+    },
+    {
+      title: 'Sushi',
+      icon: 'heart',
+      link: '/dashboard/sushi'
     },
     {
       title: 'Login',
