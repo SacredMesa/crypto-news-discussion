@@ -1,5 +1,7 @@
 import {CommonModule} from '@angular/common';
 import {NgModule} from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 
 // Routing
 import {dashboardRouting} from './dashboard.routing';
@@ -12,6 +14,7 @@ import {EthereumComponent} from './components/coins/ethereum.component';
 import {SushiswapComponent} from './components/coins/sushiswap.component';
 
 import {NewsService} from './services/news.service';
+import {ChatService} from './services/chat.service';
 
 // Nebular Modules
 import {
@@ -24,7 +27,6 @@ import {
   NbCardModule,
   NbListModule
 } from '@nebular/theme';
-
 
 const NEBULAR = [
   NbThemeModule,
@@ -47,6 +49,8 @@ const NEBULAR = [
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     dashboardRouting,
     NEBULAR
   ],
@@ -55,7 +59,8 @@ const NEBULAR = [
     BitcoinComponent
   ],
   providers: [
-    NewsService
+    NewsService,
+    ChatService
   ]
 })
 

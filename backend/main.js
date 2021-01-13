@@ -3,6 +3,7 @@ const express = require('express');
 const fetch = require('node-fetch');
 const withQuery = require('with-query').default;
 const EventEmitter = require("events");
+const expressWS = require('express-ws')
 
 const {MongoClient} = require('mongodb');
 const mysql = require('mysql2/promise');
@@ -14,12 +15,10 @@ dotenv.config();
 
 // Instances
 const app = express();
+const appWS = expressWS(app)
 
-app.use(morgan('combined'));
 app.use(cors());
-
-// Sockets
-
+// app.use(morgan('combined'));
 
 // Environment
 const PORT = parseInt(process.argv[2] || process.env.PORT) || 3000;
@@ -113,7 +112,38 @@ const featuredCoins = [
 //     });
 
 // WebSockets
+const ROOM = {}
 
+app.ws('/chat', (ws, req) => {
+    const name = req.query.name
+    console.info(`New websocket connection: ${name}`, ROOM)
+    // add the web socket connection to the room
+    ws.participantName = name
+    ROOM[name] = ws
+
+    // setup
+    ws.on('message', (payload) => {
+        console.info('>>> payload: ', payload)
+        // construct the message and stringify it
+        const chat = JSON.stringify({
+            from: name,
+            message: payload,
+            timestamp: (new Date()).toString()
+        })
+        // broadcast to everyone in the ROOM
+        for (let p in ROOM)
+            ROOM[p].send(chat)
+    })
+
+    ws.on('close', () => {
+        console.info(`Closing websocket connection for ${name}`)
+        // close our end of the connection
+        ROOM[name].close()
+        // remove ourself from the room
+        delete ROOM[name]
+    })
+
+})
 
 // Request Handlers
 app.get('/headlines/:coin', async (req, res) => {
@@ -154,7 +184,7 @@ const p1 = (async () => {
 
 Promise.all([p0, p1])
     .then(() => {
-        http.listen(PORT, () => {
+        app.listen(PORT, () => {
             console.info(`Application started on port ${PORT} at ${new Date()}`)
         })
     })
