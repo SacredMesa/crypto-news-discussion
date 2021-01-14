@@ -21,18 +21,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   private token;
   isVerified;
 
-  messages: ChatMessages[] = [
-    {
-      from: 'DegenSpartan',
-      message: 'Harrow wat this red button do',
-      timestamp: '09:37'
-    },
-    {
-      from: 'bitcoinpanda69',
-      message: 'Moon looks out of balance',
-      timestamp: '09:35'
-    }
-  ];
+  messages: ChatMessages[] = [];
 
   $event: Subscription;
 
@@ -40,6 +29,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+
+    this.form = this.fb.group({
+      message: ['', Validators.required]
+    });
+
+    this.messages = await this.chatSvc.getMessagesFromDB();
 
     this.token = sessionStorage.getItem('token');
     this.isVerified = await this.authSvc.checkAuth(this.token);
@@ -57,10 +52,6 @@ export class ChatComponent implements OnInit, OnDestroy {
     } else {
       sessionStorage.clear();
     }
-
-    this.form = this.fb.group({
-      message: ['', Validators.required]
-    });
   }
 
   ngOnDestroy(): void {

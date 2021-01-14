@@ -12,10 +12,10 @@ export class NewsService {
 
     let headlinesResults: HeadlinesResults[] = [];
 
-    const url = `http://localhost:3000/headlines/${coin}`;
+    const server = `https://octobus.herokuapp.com`;
 
     await this.http
-      .get<any>(url)
+      .get<any>(`${server}/headlines/${coin}`)
       .toPromise()
       .then(res => {
         headlinesResults = res;

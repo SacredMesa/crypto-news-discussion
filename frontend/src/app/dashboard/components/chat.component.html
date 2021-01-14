@@ -13,7 +13,7 @@
   </nb-card-body>
   <nb-card-footer>
     <div *ngIf="name">
-      <form [formGroup]="form" ng-submit="sendMessage()">
+      <form [formGroup]="form">
         <div>
           <input nbInput
                  fullWidth
@@ -23,11 +23,6 @@
                  #msgInp>
         </div>
         <div class="chat-buttons">
-<!--          <button nbButton-->
-<!--                  size="tiny"-->
-<!--                  (click)="toggleConnection()">-->
-<!--            <span [innerHTML]="text"></span>-->
-<!--          </button>-->
           <button nbButton
                   size="tiny"
                   [disabled]="!form.valid"

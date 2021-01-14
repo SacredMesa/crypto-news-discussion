@@ -1,15 +1,16 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
-import {ChatService} from '../../dashboard/services/chat.service';
 
 @Injectable()
 export class AuthService {
 
-  constructor(private http: HttpClient, private chatSvc: ChatService) {
+  server = `https://octobus.herokuapp.com`;
+
+  constructor(private http: HttpClient) {
   }
 
   login(username, password): Promise<boolean> {
-    return this.http.post<any>('http://localhost:3000/login',
+    return this.http.post<any>(`${this.server}/login`,
       {username, password}, {observe: 'response'})
       .toPromise()
       .then(res => {
@@ -30,7 +31,7 @@ export class AuthService {
   }
 
   register(username, password, nickname): Promise<boolean> {
-    return this.http.post<any>('http://localhost:3000/register',
+    return this.http.post<any>(`${this.server}/register`,
       {username, password, nickname}, {observe: 'response'})
       .toPromise()
       .then(res => {
@@ -43,7 +44,7 @@ export class AuthService {
   }
 
   checkAuth(token): Promise<boolean> {
-    return this.http.post<any>('http://localhost:3000/verify',
+    return this.http.post<any>(`${this.server}/verify`,
       {token}, {observe: 'response'})
       .toPromise()
       .then(res => {

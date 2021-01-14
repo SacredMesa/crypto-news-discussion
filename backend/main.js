@@ -64,6 +64,11 @@ const insertHeadlines = (doc, col) => {
         .insertMany(doc);
 }
 
+const insertMessage = (doc, col) => {
+    mongoClient.db(MONGO_DB).collection(col)
+        .insertOne(doc);
+}
+
 // Nodemailer
 const transporter = nodemailer.createTransport({
     service: '"SendinBlue"',
@@ -232,21 +237,24 @@ const ROOM = {
 app.ws('/chat/:coin', (ws, req) => {
     const name = req.query.name
     let coin = req.params.coin
+    let mongoCoinMsgCol = `${coin}-messages`
 
     console.info(`New websocket connection: ${name}`, ROOM)
 
     ws.participantName = name
     ROOM[coin][name] = ws
 
-    ws.on('message', (payload) => {
+    ws.on('message', async (payload) => {
         console.info('>>> payload: ', payload)
         const chat = JSON.stringify({
             from: name,
             message: payload,
             timestamp: (new Date()).toString()
         })
-        for (let p in ROOM[coin])
+        for (let p in ROOM[coin]) {
             ROOM[coin][p].send(chat)
+        }
+        await insertMessage(JSON.parse(chat), mongoCoinMsgCol)
     })
 
     ws.on('close', () => {
@@ -275,6 +283,25 @@ app.get('/headlines/:coin', async (req, res) => {
         res.send(JSON.stringify(e));
     }
 })
+
+app.get('/messages/pull/:coin', async (req, res) => {
+    let coinName = req.params.coin
+    try {
+        const messages = (await mongoClient.db(MONGO_DB)
+            .collection(`${coinName}-messages`)
+            .find({})
+            .toArray())
+        res.status(200);
+        res.type('application/JSON');
+        res.json(messages)
+    } catch (e) {
+        console.info(e)
+        res.status(500);
+        res.type('text/html');
+        res.send(JSON.stringify(e));
+    }
+})
+
 
 app.post('/login',
     localStrategyAuth, (req, res) => {
