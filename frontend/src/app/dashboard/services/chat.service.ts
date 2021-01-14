@@ -6,7 +6,7 @@ import {ChatMessages} from '../interfaces/chat.interface';
 @Injectable()
 export class ChatService {
 
-  server = `ws://octobus.herokuapp.com`;
+  server = `wss://octobus.herokuapp.com`;
 
   currentCoin;
   nickname;
