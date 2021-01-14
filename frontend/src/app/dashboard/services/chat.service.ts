@@ -6,8 +6,14 @@ import {ChatMessages} from '../interfaces/chat.interface';
 @Injectable()
 export class ChatService {
 
+  currentCoin;
+
   private sock: WebSocket = null;
   event = new Subject<ChatMessages>();
+
+  setRoom(coin): void {
+    this.currentCoin = coin;
+  }
 
   sendMessage(msg): any {
     this.sock.send(msg);
@@ -15,7 +21,7 @@ export class ChatService {
 
   join(name: string): void {
     const params = new HttpParams().set('name', name);
-    const url = `ws://localhost:3000/chat?${params.toString()}`;
+    const url = `ws://localhost:3000/chat/${this.currentCoin}?${params.toString()}`;
     console.log('ws url: ', url);
     this.sock = new WebSocket(url);
 
@@ -26,7 +32,7 @@ export class ChatService {
 
     this.sock.onclose = () => {
       if (this.sock != null) {
-        console.log('STOP CLOSING')
+        console.log('OH NO IT IS CLOSING');
         this.sock.close();
         this.sock = null;
       }
@@ -37,7 +43,7 @@ export class ChatService {
     if (this.sock != null) {
       this.sock.close();
       this.sock = null;
-      console.log(`${name} is leaving`)
+      console.log(`${name} is leaving`);
     }
   }
 }

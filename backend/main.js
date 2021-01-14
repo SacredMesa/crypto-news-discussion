@@ -3,7 +3,11 @@ const express = require('express');
 const fetch = require('node-fetch');
 const withQuery = require('with-query').default;
 const EventEmitter = require("events");
-const expressWS = require('express-ws')
+const expressWS = require('express-ws');
+
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const jwt = require('jsonwebtoken')
 
 const {MongoClient} = require('mongodb');
 const mysql = require('mysql2/promise');
@@ -19,6 +23,8 @@ const appWS = expressWS(app)
 
 app.use(cors());
 // app.use(morgan('combined'));
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 // Environment
 const PORT = parseInt(process.argv[2] || process.env.PORT) || 3000;
@@ -36,6 +42,8 @@ const pool = mysql.createPool({
     database: process.env.MYSQL_SCHEMA,
     connectionLimit: process.env.MYSQL_CONN_LIMIT
 });
+
+const SQL_SELECT_USER = 'select user_id from user where user_id = ? and password = sha1(?)'
 
 // Mongo Settings
 const MONGO_URL = process.env.MONGO_URL;
@@ -94,7 +102,7 @@ const featuredCoins = [
 //             formattedResults.push(
 //                 {
 //                     pubDate: new Date(resultsRaw.hits[x].pubDate).toLocaleDateString(),
-//                     pubTime: new Date(resultsRaw.hits[x].pubDate).toLocaleTimeString(),
+//                     pubTime: new Date(resultsRaw.hits[x].pubDate).toLocaleTimeString([], { hour12: false }),
 //                     title: resultsRaw.hits[x].title,
 //                     source: resultsRaw.hits[x].source,
 //                     url: resultsRaw.hits[x].url
@@ -104,58 +112,108 @@ const featuredCoins = [
 //         headlinesEmitter.emit("newNews", formattedResults, featuredCoins[i]);
 //     }
 // }, 20000);
-
+//
 // headlinesEmitter.on("newNews",
 //     async (news, coin) => {
 //         await insertHeadlines(news, coin)
 //         console.log(`New headlines for ${coin} inserted into Mongo at: ${new Date()}`);
 //     });
 
-// WebSockets
-const ROOM = {}
+// Authentication Settings
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 'abcd1234'
 
-app.ws('/chat', (ws, req) => {
+const mkAuth = (passport) => {
+    return (req, resp, next) => {
+        passport.authenticate('local',
+            (err, user, info) => {
+                if ((null != err) || (!user)) {
+                    resp.status(401)
+                    resp.type('application/json')
+                    resp.json({ error: err })
+                    return
+                }
+                // attach user to the request object
+                req.user = user
+                next()
+            }
+        )(req, resp, next)
+    }
+}
+
+passport.use(
+    new LocalStrategy(
+        { usernameField: 'username', passwordField: 'password' },
+        async (user, password, done) => {
+            // perform the authentication
+            console.info(`LocalStrategy> username: ${user}, password: ${password}`)
+            const conn = await pool.getConnection()
+            try {
+                const [ result, _ ] = await conn.query(SQL_SELECT_USER, [ user, password ])
+                console.info('>>> result: ', result)
+                if (result.length > 0)
+                    done(null, {
+                        username: result[0].user_id,
+                        avatar: `https://i.pravatar.cc/400?u=${result[0].email}`,
+                        loginTime: (new Date()).toString()
+                    })
+                else
+                    done('Incorrect login', false)
+            } catch(e) {
+                done(e, false)
+            } finally {
+                conn.release()
+            }
+        }
+    )
+)
+
+const localStrategyAuth = mkAuth(passport)
+
+app.use(passport.initialize())
+
+// Chat WebSockets
+const ROOM = {
+    bitcoin: {},
+    ethereum: {},
+    sushiswap: {}
+}
+
+app.ws('/chat/:coin', (ws, req) => {
     const name = req.query.name
-    console.info(`New websocket connection: ${name}`, ROOM)
-    // add the web socket connection to the room
-    ws.participantName = name
-    ROOM[name] = ws
+    let coin = req.params.coin
 
-    // setup
+    console.info(`New websocket connection: ${name}`, ROOM)
+
+    ws.participantName = name
+    ROOM[coin][name] = ws
+
     ws.on('message', (payload) => {
         console.info('>>> payload: ', payload)
-        // construct the message and stringify it
         const chat = JSON.stringify({
             from: name,
             message: payload,
             timestamp: (new Date()).toString()
         })
-        // broadcast to everyone in the ROOM
-        for (let p in ROOM)
-            ROOM[p].send(chat)
+        for (let p in ROOM[coin])
+            ROOM[coin][p].send(chat)
     })
 
     ws.on('close', () => {
         console.info(`Closing websocket connection for ${name}`)
-        // close our end of the connection
-        ROOM[name].close()
-        // remove ourself from the room
-        delete ROOM[name]
+        ROOM[coin][name].close()
+        delete ROOM[coin][name]
     })
 
 })
 
 // Request Handlers
 app.get('/headlines/:coin', async (req, res) => {
-
     let coinName = req.params.coin
-
     try {
         const headlines = (await mongoClient.db(MONGO_DB)
             .collection(coinName)
             .find({})
             .toArray())
-
         res.status(200);
         res.type('application/JSON');
         res.json(headlines)
@@ -165,8 +223,35 @@ app.get('/headlines/:coin', async (req, res) => {
         res.type('text/html');
         res.send(JSON.stringify(e));
     }
-
 })
+
+app.post('/login',
+    // passport middleware to perform login
+    // passport.authenticate('local', { session: false }),
+    // authenticate with custom error handling
+    localStrategyAuth,
+    (req, resp) => {
+        // do something
+        console.info(`user: `, req.user)
+        // generate JWT token
+        const timestamp = (new Date()).getTime() / 1000
+        const token = jwt.sign({
+            sub: req.user.username,
+            iss: 'myapp',
+            iat: timestamp,
+            //nbf: timestamp + 30,
+            exp: timestamp + (60 * 60),
+            data: {
+                avatar: req.user.avatar,
+                loginTime: req.user.loginTime
+            }
+        }, TOKEN_SECRET)
+
+        resp.status(200)
+        resp.type('application/json')
+        resp.json({message: `Login in at ${new Date()}`, token})
+    }
+)
 
 // Start Server
 const p0 = (async () => {

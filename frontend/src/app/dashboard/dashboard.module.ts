@@ -25,7 +25,8 @@ import {
   NbMenuModule,
   NbIconModule,
   NbCardModule,
-  NbListModule
+  NbListModule,
+  NbInputModule
 } from '@nebular/theme';
 
 const NEBULAR = [
@@ -36,7 +37,8 @@ const NEBULAR = [
   NbMenuModule,
   NbIconModule,
   NbCardModule,
-  NbListModule
+  NbListModule,
+  NbInputModule
 ];
 
 @NgModule({

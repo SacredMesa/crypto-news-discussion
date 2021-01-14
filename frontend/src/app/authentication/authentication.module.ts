@@ -20,6 +20,7 @@ import {
   NbSidebarModule,
   NbThemeModule
 } from '@nebular/theme';
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 
 const NEBULAR = [
   NbThemeModule,
@@ -41,6 +42,8 @@ const NEBULAR = [
   ],
   imports: [
     CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
     authenticationRouting,
     NEBULAR
   ],

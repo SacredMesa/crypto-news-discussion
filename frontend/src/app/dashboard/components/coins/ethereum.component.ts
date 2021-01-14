@@ -1,5 +1,6 @@
 import {AfterViewInit, Component, OnDestroy, OnInit} from '@angular/core';
 
+import {ChatService} from '../../services/chat.service';
 import {NewsService} from '../../services/news.service';
 import {HeadlinesResults} from '../../interfaces/headlines-results.interface';
 
@@ -21,10 +22,12 @@ export class EthereumComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private onDestroy$ = new Subject<void>();
 
-  constructor(private newsSvc: NewsService) {
+  constructor(private newsSvc: NewsService, private chatSvc: ChatService) {
   }
 
   async ngOnInit(): Promise<any> {
+    this.chatSvc.setRoom(this.coin);
+
     this.headlinesResults = await this.newsSvc.getHeadlinesFromDB(this.coin);
     console.log('Inited headlines');
 

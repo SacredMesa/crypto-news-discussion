@@ -1,5 +1,5 @@
-import {Component, OnDestroy, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
+import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Subscription} from 'rxjs';
 import {ChatService} from '../services/chat.service';
 import {ChatMessages} from '../interfaces/chat.interface';
@@ -10,14 +10,24 @@ import {ChatMessages} from '../interfaces/chat.interface';
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  @ViewChild('msgInp') msgInp: ElementRef;
+
   text = 'Join';
   form: FormGroup;
+  name;
 
-  messages: ChatMessages[] = [{
-    from: 'test',
-    message: 'testest',
-    timestamp: 'anytime'
-  }];
+  messages: ChatMessages[] = [
+    {
+      from: 'DegenSpartan',
+      message: 'Harrow wat this red button do',
+      timestamp: '09:37'
+    },
+    {
+      from: 'bitcoinpanda69',
+      message: 'Moon looks out of balance to Chang. Sell now',
+      timestamp: '09:35'
+    }
+  ];
 
   $event: Subscription;
 
@@ -27,7 +37,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.form = this.fb.group({
       username: this.fb.control(''),
-      message: this.fb.control('')
+      message: ['', Validators.required]
     });
   }
 
@@ -43,24 +53,25 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.form.get('message').reset();
     console.log('>>> message: ', message);
     this.chatSvc.sendMessage(message);
+    this.msgInp.nativeElement.focus();
   }
 
   toggleConnection(): void {
     if (this.text === 'Join') {
       this.text = 'Leave';
-      const name = this.form.get('username').value;
-      this.chatSvc.join(name);
+      this.name = this.form.get('username').value;
+      this.chatSvc.join(this.name);
 
       this.$event = this.chatSvc.event.subscribe(
         (chat) => {
-          this.messages.unshift(chat);
+          this.messages.push(chat);
           console.log('message being pushed: ', chat, ' All Msgs: ', this.messages);
         }
       );
     } else {
       this.text = 'Join';
-      const name = this.form.get('username').value;
-      this.chatSvc.leave(name);
+      this.name = this.form.get('username').value;
+      this.chatSvc.leave(this.name);
       this.$event.unsubscribe();
       this.$event = null;
     }

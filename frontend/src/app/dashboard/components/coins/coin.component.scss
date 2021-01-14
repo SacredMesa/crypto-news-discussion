@@ -15,14 +15,35 @@ nb-layout-column:last-child {
   flex: 5 !important;
 }
 
+nb-list-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+code {
+  font-size: 0.8em;
+}
+
+a {
+  text-decoration: none;
+  &:link {
+    color: #3B8CFF;
+  }
+  &:hover {
+    color: #3AFF29 !important;
+  }
+  &:active {
+    color: #3B8CFF;
+  }
+  &:visited {
+    color: #3B8CFF;
+  }
+}
+
 .headline-card {
   max-height: 23em;
   overflow-y: scroll;
   margin: 0.5em;
-}
-
-.chat {
-  height: 90%;
 }
 
 .chart {
