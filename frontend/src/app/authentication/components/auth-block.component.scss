@@ -42,10 +42,14 @@
       text-align: center;
     }
 
-    .title {
+    .title, .err-msg {
       margin-top: 0;
       margin-bottom: 0.75rem;
       text-align: center;
+    }
+
+    .err-msg {
+      color: red;
     }
 
     .sub-title {

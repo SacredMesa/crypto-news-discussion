@@ -7,6 +7,7 @@ import {ChatMessages} from '../interfaces/chat.interface';
 export class ChatService {
 
   currentCoin;
+  nickname;
 
   private sock: WebSocket = null;
   event = new Subject<ChatMessages>();

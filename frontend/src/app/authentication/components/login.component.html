@@ -1,54 +1,75 @@
-<h1 id="title" class="title">Login</h1>
-<p class="sub-title">Get back to dropping some alphas</p>
+<div *ngIf="!isVerified">
+  <h1 id="title" class="title">Login</h1>
+  <p class="sub-title">Get back to dropping some alphas</p>
 
-<form [formGroup]="loginForm" aria-labelledby="title">
+  <p class="err-msg" *ngIf="errMsg">
+    {{this.errMsg}}
+  </p>
 
-  <div class="form-control-group">
-    <label class="label" for="input-email">Email address:</label>
-    <input nbInput
-           fullWidth
-           name="email"
-           id="input-email"
-           pattern=".+@.+\..+"
-           placeholder="Email address"
-           fieldSize="large"
-           formControlName="username"
-           autofocus>
-  </div>
+  <form [formGroup]="loginForm" aria-labelledby="title">
 
-  <div class="form-control-group">
+    <div class="form-control-group">
+      <label class="label" for="input-email">Email address: </label>
+      <input nbInput
+             fullWidth
+             name="email"
+             id="input-email"
+             pattern=".+@.+\..+"
+             placeholder="Email address"
+             fieldSize="large"
+             formControlName="username"
+             autofocus>
+      <div *ngIf="loginForm.get('username').errors?.pattern">Please enter a valid email</div>
+    </div>
+
+
+    <div class="form-control-group">
     <span class="label-with-link">
       <label class="label" for="input-password">Password:</label>
       <a class="forgot-password caption-2" routerLink="../request-password">Forgot Password?</a>
     </span>
-    <input nbInput
-           fullWidth
-           name="password"
-           type="password"
-           id="input-password"
-           placeholder="Password"
-           fieldSize="large"
-           formControlName="password">
-  </div>
+      <input nbInput
+             fullWidth
+             name="password"
+             type="password"
+             id="input-password"
+             placeholder="Password"
+             fieldSize="large"
+             formControlName="password">
+    </div>
 
+    <button nbButton
+            fullWidth
+            status="primary"
+            size="large"
+            [disabled]="!loginForm.valid"
+            (click)="login()">
+      Log In
+    </button>
+  </form>
+
+  <section class="links" aria-label="Social sign in">
+    or
+    <div class="socials">
+      <ng-container>
+        <a target="_blank" href="http://localhost:3000/auth/google">
+          <img src="../../../assets/google-button.png">
+        </a>
+      </ng-container>
+    </div>
+  </section>
+
+  <section class="another-action" aria-label="Register">
+    Don't have an account? <a class="text-link" routerLink="/auth/register">Register</a>
+  </section>
+</div>
+
+<div *ngIf="isVerified">
   <button nbButton
           fullWidth
           status="primary"
           size="large"
-          (click)="login()">
-    Log In
+          (click)="logout()">
+    Log Out
   </button>
-</form>
-
-<section class="links" aria-label="Social sign in">
-  or enter with:
-  <div class="socials">
-    <ng-container>
-      socials OAuth
-    </ng-container>
-  </div>
-</section>
-
-<section class="another-action" aria-label="Register">
-  Don't have an account? <a class="text-link" routerLink="/auth/register">Register</a>
-</section>
+</div>

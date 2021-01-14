@@ -3,6 +3,8 @@ import {NgModule} from '@angular/core';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 import {HttpClientModule} from '@angular/common/http';
 
+import {ChatService} from './dashboard/services/chat.service';
+
 import {Routing} from './app.routing';
 
 import {AppComponent} from './app.component';
@@ -40,7 +42,7 @@ const NEBULAR = [
     HttpClientModule,
     NEBULAR
   ],
-  providers: [],
+  providers: [ChatService],
   bootstrap: [AppComponent]
 })
 export class AppModule {

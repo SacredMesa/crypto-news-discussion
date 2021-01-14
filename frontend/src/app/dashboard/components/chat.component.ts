@@ -1,7 +1,10 @@
 import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 import {Subscription} from 'rxjs';
+
 import {ChatService} from '../services/chat.service';
+import {AuthService} from '../../authentication/services/auth.service';
+
 import {ChatMessages} from '../interfaces/chat.interface';
 
 @Component({
@@ -12,9 +15,11 @@ import {ChatMessages} from '../interfaces/chat.interface';
 export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('msgInp') msgInp: ElementRef;
 
-  text = 'Join';
+  text = 'Join Chat';
   form: FormGroup;
   name;
+  private token;
+  isVerified;
 
   messages: ChatMessages[] = [
     {
@@ -24,25 +29,43 @@ export class ChatComponent implements OnInit, OnDestroy {
     },
     {
       from: 'bitcoinpanda69',
-      message: 'Moon looks out of balance to Chang. Sell now',
+      message: 'Moon looks out of balance',
       timestamp: '09:35'
     }
   ];
 
   $event: Subscription;
 
-  constructor(private fb: FormBuilder, private chatSvc: ChatService) {
+  constructor(private fb: FormBuilder, private chatSvc: ChatService, private authSvc: AuthService) {
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+
+    this.token = sessionStorage.getItem('token');
+    this.isVerified = await this.authSvc.checkAuth(this.token);
+
+    if (this.isVerified && sessionStorage.getItem('nickname') !== undefined) {
+      this.name = sessionStorage.getItem('nickname');
+      this.chatSvc.join(this.name);
+
+      this.$event = this.chatSvc.event.subscribe(
+        (chat) => {
+          this.messages.push(chat);
+          console.log('message being pushed: ', chat, ' All Msgs: ', this.messages);
+        }
+      );
+    } else {
+      sessionStorage.clear();
+    }
+
     this.form = this.fb.group({
-      username: this.fb.control(''),
       message: ['', Validators.required]
     });
   }
 
   ngOnDestroy(): void {
     if (null != this.$event) {
+      this.chatSvc.leave(this.name);
       this.$event.unsubscribe();
       this.$event = null;
     }
@@ -55,25 +78,5 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.chatSvc.sendMessage(message);
     this.msgInp.nativeElement.focus();
   }
-
-  toggleConnection(): void {
-    if (this.text === 'Join') {
-      this.text = 'Leave';
-      this.name = this.form.get('username').value;
-      this.chatSvc.join(this.name);
-
-      this.$event = this.chatSvc.event.subscribe(
-        (chat) => {
-          this.messages.push(chat);
-          console.log('message being pushed: ', chat, ' All Msgs: ', this.messages);
-        }
-      );
-    } else {
-      this.text = 'Join';
-      this.name = this.form.get('username').value;
-      this.chatSvc.leave(this.name);
-      this.$event.unsubscribe();
-      this.$event = null;
-    }
-  }
 }
+

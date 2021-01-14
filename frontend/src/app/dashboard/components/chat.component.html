@@ -12,33 +12,33 @@
     </ol>
   </nb-card-body>
   <nb-card-footer>
-    <form [formGroup]="form" ng-submit="sendMessage()">
-      <input nbInput
-             type="text"
-             placeholder="Your name"
-             formControlName="username">
-      <button nbButton
-              size="tiny"
-              (click)="toggleConnection()">
-        <span [innerHTML]="text"></span>
-      </button>
-
-      <div>
-        <input nbInput
-               fullWidth
-               type="text"
-               placeholder="Your message"
-               formControlName="message"
-               #msgInp>
-      </div>
-      <div style="float: right;">
-        <button nbButton
-                size="tiny"
-                [disabled]="!form.valid"
-                (click)="sendMessage()">
-          Send
-        </button>
-      </div>
-    </form>
+    <div *ngIf="name">
+      <form [formGroup]="form" ng-submit="sendMessage()">
+        <div>
+          <input nbInput
+                 fullWidth
+                 type="text"
+                 placeholder="Your message"
+                 formControlName="message"
+                 #msgInp>
+        </div>
+        <div class="chat-buttons">
+<!--          <button nbButton-->
+<!--                  size="tiny"-->
+<!--                  (click)="toggleConnection()">-->
+<!--            <span [innerHTML]="text"></span>-->
+<!--          </button>-->
+          <button nbButton
+                  size="tiny"
+                  [disabled]="!form.valid"
+                  (click)="sendMessage()">
+            Send
+          </button>
+        </div>
+      </form>
+    </div>
+    <div *ngIf="!name">
+      <p>Please Login to Chat</p>
+    </div>
   </nb-card-footer>
 </nb-card>

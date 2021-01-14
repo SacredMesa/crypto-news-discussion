@@ -15,6 +15,7 @@ import {SushiswapComponent} from './components/coins/sushiswap.component';
 
 import {NewsService} from './services/news.service';
 import {ChatService} from './services/chat.service';
+import {AuthService} from '../authentication/services/auth.service';
 
 // Nebular Modules
 import {
@@ -62,7 +63,8 @@ const NEBULAR = [
   ],
   providers: [
     NewsService,
-    ChatService
+    ChatService,
+    AuthService
   ]
 })
 

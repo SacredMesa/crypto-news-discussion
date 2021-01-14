@@ -27,7 +27,7 @@ export class DashComponent {
       link: '/dashboard/sushi'
     },
     {
-      title: 'Login',
+      title: 'Account',
       icon: 'lock',
       link: '/auth'
     }

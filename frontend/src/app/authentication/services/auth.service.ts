@@ -1,34 +1,60 @@
 import {Injectable} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
+import {ChatService} from '../../dashboard/services/chat.service';
 
 @Injectable()
 export class AuthService {
 
-  private token = '';
-
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private chatSvc: ChatService) {
   }
 
   login(username, password): Promise<boolean> {
-
-    this.token = '';
     return this.http.post<any>('http://localhost:3000/login',
-      {username, password}, {observe: 'response'}
-    ).toPromise()
-      .then(resp => {
-        if (resp.status === 200) {
-          this.token = resp.body.token;
+      {username, password}, {observe: 'response'})
+      .toPromise()
+      .then(res => {
+        if (res.status === 200) {
+          sessionStorage.setItem('nickname', res.body.nickname);
+          sessionStorage.setItem('token', res.body.token);
         }
-        console.log('resp: ', resp);
+        console.log('res: ', res);
         return true;
       })
       .catch(err => {
         if (err.status === 401) {
-          console.log('ERROR LOGGING IN')
+          console.log('ERROR LOGGING IN');
         }
         console.log('err:', err);
         return false;
       });
+  }
+
+  register(username, password, nickname): Promise<boolean> {
+    return this.http.post<any>('http://localhost:3000/register',
+      {username, password, nickname}, {observe: 'response'})
+      .toPromise()
+      .then(res => {
+        console.log('res', res);
+        return true;
+      })
+      .catch(err => {
+        return false;
+      });
+  }
+
+  checkAuth(token): Promise<boolean> {
+    return this.http.post<any>('http://localhost:3000/verify',
+      {token}, {observe: 'response'})
+      .toPromise()
+      .then(res => {
+        console.log('res', res);
+        return true;
+      })
+      .catch(err => {
+        console.log('err', err);
+        return false;
+      });
+
   }
 
 }

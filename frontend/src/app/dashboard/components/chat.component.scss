@@ -7,6 +7,13 @@
 .messages {
 }
 
+.chat-buttons {
+  display: flex;
+  justify-content: space-between;
+  visibility: hidden;
+}
+
+
 .chat ol {
   padding: 0;
 }

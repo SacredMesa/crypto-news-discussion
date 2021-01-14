@@ -20,7 +20,8 @@ import {
   NbSidebarModule,
   NbThemeModule
 } from '@nebular/theme';
-import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { RegSuccessComponent } from './components/reg-success.component';
 
 const NEBULAR = [
   NbThemeModule,
@@ -38,7 +39,8 @@ const NEBULAR = [
     AuthBlockComponent,
     AuthComponent,
     LoginComponent,
-    RegisterComponent
+    RegisterComponent,
+    RegSuccessComponent
   ],
   imports: [
     CommonModule,

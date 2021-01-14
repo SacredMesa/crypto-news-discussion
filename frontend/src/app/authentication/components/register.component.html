@@ -1,7 +1,7 @@
 <h1 id="title" class="title">Registration</h1>
 <p class="sub-title">Sign up for your new account! :)</p>
 
-<form aria-labelledby="title">
+<form [formGroup]="regForm" aria-labelledby="title">
 
   <div class="form-control-group">
     <label class="label" for="input-email">Email address:</label>
@@ -12,7 +12,9 @@
            pattern=".+@.+\..+"
            placeholder="Email address"
            fieldSize="large"
+           formControlName="username"
            autofocus>
+    <div *ngIf="regForm.get('username').errors?.pattern">Please enter a valid email</div>
   </div>
 
   <div class="form-control-group">
@@ -25,6 +27,7 @@
            type="password"
            id="input-password"
            placeholder="Password"
+           formControlName="password"
            fieldSize="large">
   </div>
 
@@ -38,14 +41,21 @@
            maxlength="15"
            placeholder="Nickname"
            fieldSize="large"
+           formControlName="nickname"
            autofocus>
+    <div *ngIf="regForm.get('nickname').errors?.minlength || regForm.get('nickname').errors?.maxlength">Nickname must be 8-15 characters in length</div>
   </div>
 
   <button nbButton
           fullWidth
           status="primary"
           size="large"
+          [disabled]="!regForm.valid"
           (click)="register()">
     Sign Up
   </button>
 </form>
+<br>
+<p class="err-msg" *ngIf="errMsg">
+  {{this.errMsg}}
+</p>

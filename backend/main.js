@@ -7,7 +7,9 @@ const expressWS = require('express-ws');
 
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken')
+const nodemailer = require('nodemailer');
 
 const {MongoClient} = require('mongodb');
 const mysql = require('mysql2/promise');
@@ -22,9 +24,9 @@ const app = express();
 const appWS = expressWS(app)
 
 app.use(cors());
-// app.use(morgan('combined'));
+app.use(morgan('combined'));
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.urlencoded({extended: true}))
 
 // Environment
 const PORT = parseInt(process.argv[2] || process.env.PORT) || 3000;
@@ -43,7 +45,8 @@ const pool = mysql.createPool({
     connectionLimit: process.env.MYSQL_CONN_LIMIT
 });
 
-const SQL_SELECT_USER = 'select user_id from user where user_id = ? and password = sha1(?)'
+const SQL_SELECT_USER = 'select email, nickname from user where email = ? and password = sha1(?)';
+const SQL_REGISTER_USER = 'insert into user(email, password, nickname) values (?, sha1(?), ?)';
 
 // Mongo Settings
 const MONGO_URL = process.env.MONGO_URL;
@@ -59,6 +62,37 @@ const insertHeadlines = (doc, col) => {
         .drop();
     mongoClient.db(MONGO_DB).collection(col)
         .insertMany(doc);
+}
+
+// Nodemailer
+const transporter = nodemailer.createTransport({
+    service: '"SendinBlue"',
+    auth: {
+        user: process.env.EMAIL_ADDRESS,
+        pass: process.env.EMAIL_PASSWORD
+    }
+});
+
+const welcomeMail = (recipient) => {
+    return{
+        from: process.env.EMAIL_ADDRESS,
+        to: recipient.email,
+        subject: 'Ready for some Alphas?',
+        html: `<b>Welcome to OctoBus! Login today and get the alphas you need to ride your way to the moon</b><br><hr>
+            Username: <b>${recipient.username}</b><br>
+            Created on: <b>${new Date()}</b>`
+    }
+};
+
+const sendMail = (recipient) => {
+    const mail = welcomeMail(recipient)
+    transporter.sendMail(mail, (error, info) => {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log('Email sent: ' + info.response);
+        }
+    });
 }
 
 // API query and recurring call
@@ -89,83 +123,100 @@ const featuredCoins = [
     'sushiswap'
 ]
 
-// const headlinesEmitter = new EventEmitter();
-//
-// setInterval(async () => {
-//
-//     for (let i = 0; i < featuredCoins.length; i++) {
-//         const resultsRaw = await getHeadlines(featuredCoins[i]);
-//
-//         const formattedResults = []
-//
-//         for (let x = 0; x < resultsRaw.hits.length; x++) {
-//             formattedResults.push(
-//                 {
-//                     pubDate: new Date(resultsRaw.hits[x].pubDate).toLocaleDateString(),
-//                     pubTime: new Date(resultsRaw.hits[x].pubDate).toLocaleTimeString([], { hour12: false }),
-//                     title: resultsRaw.hits[x].title,
-//                     source: resultsRaw.hits[x].source,
-//                     url: resultsRaw.hits[x].url
-//                 }
-//             )
-//         }
-//         headlinesEmitter.emit("newNews", formattedResults, featuredCoins[i]);
-//     }
-// }, 20000);
-//
-// headlinesEmitter.on("newNews",
-//     async (news, coin) => {
-//         await insertHeadlines(news, coin)
-//         console.log(`New headlines for ${coin} inserted into Mongo at: ${new Date()}`);
-//     });
+const headlinesEmitter = new EventEmitter();
+
+setInterval(async () => {
+
+    for (let i = 0; i < featuredCoins.length; i++) {
+        const resultsRaw = await getHeadlines(featuredCoins[i]);
+
+        const formattedResults = []
+
+        for (let x = 0; x < resultsRaw.hits.length; x++) {
+            formattedResults.push(
+                {
+                    pubDate: new Date(resultsRaw.hits[x].pubDate).toLocaleDateString(),
+                    pubTime: new Date(resultsRaw.hits[x].pubDate).toLocaleTimeString([], { hour12: false }),
+                    title: resultsRaw.hits[x].title,
+                    source: resultsRaw.hits[x].source,
+                    url: resultsRaw.hits[x].url
+                }
+            )
+        }
+        headlinesEmitter.emit("newNews", formattedResults, featuredCoins[i]);
+    }
+}, 3600000);
+
+headlinesEmitter.on("newNews",
+    async (news, coin) => {
+        await insertHeadlines(news, coin)
+        console.log(`New headlines for ${coin} inserted into Mongo at: ${new Date()}`);
+    });
 
 // Authentication Settings
-const TOKEN_SECRET = process.env.TOKEN_SECRET || 'abcd1234'
+const TOKEN_SECRET = process.env.TOKEN_SECRET
 
 const mkAuth = (passport) => {
-    return (req, resp, next) => {
+    return (req, res, next) => {
         passport.authenticate('local',
             (err, user, info) => {
                 if ((null != err) || (!user)) {
-                    resp.status(401)
-                    resp.type('application/json')
-                    resp.json({ error: err })
+                    res.status(401)
+                    res.type('application/json')
+                    res.json({error: err})
                     return
                 }
                 // attach user to the request object
                 req.user = user
                 next()
             }
-        )(req, resp, next)
+        )(req, res, next)
     }
 }
 
 passport.use(
     new LocalStrategy(
-        { usernameField: 'username', passwordField: 'password' },
+        {usernameField: 'username', passwordField: 'password'},
         async (user, password, done) => {
             // perform the authentication
-            console.info(`LocalStrategy> username: ${user}, password: ${password}`)
-            const conn = await pool.getConnection()
+            console.log(`LocalStrategy> username: ${user}, password: ${password}`);
+            const conn = await pool.getConnection();
             try {
-                const [ result, _ ] = await conn.query(SQL_SELECT_USER, [ user, password ])
-                console.info('>>> result: ', result)
-                if (result.length > 0)
+                const [result, _] = await conn.query(SQL_SELECT_USER, [user, password]);
+                console.log('>>> result: ', result);
+                if (result.length > 0) {
                     done(null, {
-                        username: result[0].user_id,
+                        email: result[0].email,
+                        nickname: result[0].nickname,
                         avatar: `https://i.pravatar.cc/400?u=${result[0].email}`,
                         loginTime: (new Date()).toString()
-                    })
-                else
-                    done('Incorrect login', false)
-            } catch(e) {
-                done(e, false)
+                    });
+                } else
+                    done('Incorrect login', false);
+            } catch (e) {
+                done(e, false);
             } finally {
-                conn.release()
+                conn.release();
             }
         }
     )
 )
+
+passport.use(
+    new GoogleStrategy({
+            clientID: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            callbackURL: "http://localhost:3000/auth/google/callback"
+        },
+        (accessToken, refreshToken, profile, cb) => {
+            User.findOrCreate({googleId: profile.id},
+                (err, user) => {
+                    return cb(err, user);
+                }
+            );
+        }
+    )
+);
 
 const localStrategyAuth = mkAuth(passport)
 
@@ -226,20 +277,13 @@ app.get('/headlines/:coin', async (req, res) => {
 })
 
 app.post('/login',
-    // passport middleware to perform login
-    // passport.authenticate('local', { session: false }),
-    // authenticate with custom error handling
-    localStrategyAuth,
-    (req, resp) => {
-        // do something
+    localStrategyAuth, (req, res) => {
         console.info(`user: `, req.user)
-        // generate JWT token
         const timestamp = (new Date()).getTime() / 1000
         const token = jwt.sign({
             sub: req.user.username,
-            iss: 'myapp',
+            iss: 'OctoBu$-Backend',
             iat: timestamp,
-            //nbf: timestamp + 30,
             exp: timestamp + (60 * 60),
             data: {
                 avatar: req.user.avatar,
@@ -247,11 +291,77 @@ app.post('/login',
             }
         }, TOKEN_SECRET)
 
-        resp.status(200)
-        resp.type('application/json')
-        resp.json({message: `Login in at ${new Date()}`, token})
+        res.status(200)
+        res.type('application/json')
+        res.json({message: `Login in at ${new Date()}`, token, nickname: req.user.nickname})
     }
 )
+
+app.get('/auth/google',
+    passport.authenticate('google', {scope: ["email"]})
+)
+
+app.get("/auth/google/callback", passport.authenticate('google'),
+    (req, resp) => {
+        const token = generateJWT(req)
+        if (token) {
+            let responseHTML = '<html><head><title>Main</title></head><body></body><script>res = %value%; window.opener.postMessage(res, "*");window.close();</script></html>'
+            responseHTML = responseHTML.replace('%value%', JSON.stringify({
+                user: req.user.username,
+                token
+            }));
+            resp.status(200).send(responseHTML);
+        }
+    });
+
+app.post('/register', async (req, res) => {
+
+    console.log("incoming registration body: ", req.body);
+
+    const conn = await pool.getConnection();
+    try {
+        const [result, _] = await conn.query(
+            SQL_REGISTER_USER,
+            [req.body.username, req.body.password, req.body.nickname]
+        )
+
+        const email = req.body.username;
+        const nick = req.body.nickname;
+
+
+        console.log('>>>REGISTRATION RESULTS: ', result);
+
+        sendMail({email, nick})
+
+        res.status(200)
+        res.type('application/json')
+        res.json('registration worked. Please now login')
+    } catch (e) {
+        console.log('Something went wrong: ', e)
+        res.status(409)
+        res.type('application/json')
+        res.json(JSON.stringify(e))
+    } finally {
+        conn.release();
+    }
+});
+
+app.post('/verify', (req, res) => {
+    const token = req.body.token
+    console.log('token: ', token)
+    try {
+        const verified = jwt.verify(token, TOKEN_SECRET)
+        console.info(`Verified token`, verified)
+        req.token = verified
+        res.status(200)
+        res.type('application/json')
+        res.json(verified)
+    } catch (e) {
+        res.status(403)
+        res.json({message: 'Forbidden!', error: e})
+        return
+    }
+})
 
 // Start Server
 const p0 = (async () => {
