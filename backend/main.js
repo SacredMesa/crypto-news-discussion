@@ -193,7 +193,6 @@ passport.use(
                     done(null, {
                         email: result[0].email,
                         nickname: result[0].nickname,
-                        avatar: `https://i.pravatar.cc/400?u=${result[0].email}`,
                         loginTime: (new Date()).toString()
                     });
                 } else
@@ -211,7 +210,7 @@ passport.use(
     new GoogleStrategy({
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "http://localhost:3000/auth/google/callback"
+            callbackURL: "https://octobus.herokuapp.com/auth/google/callback"
         },
         (accessToken, refreshToken, profile, cb) => {
             User.findOrCreate({googleId: profile.id},
